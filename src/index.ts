@@ -5,7 +5,9 @@ import * as Figma from 'figma-js';
 import { parseDesignTokens, printDesignTokens } from './parsers/design-tokens';
 import { parseComponents, printComponents } from './parsers/components';
 import { downloadAssets, parseAssetsTokens } from './parsers/exports';
+import { colorsToCss, textStylesToCss } from './transormers/figma-to-css'
 import chalk from "chalk";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 
 const cmdLineParser = yargs
@@ -53,23 +55,34 @@ async function main() {
     })
 
     let fileResponse = await client.file(fileId)
-    if(fileResponse.status == 200){
+    if (fileResponse.status == 200) {
         let components = await parseComponents(fileResponse.data)
         printComponents(components)
-    
+
         let designTokens = await parseDesignTokens(fileResponse.data)
         printDesignTokens(designTokens)
-    
         let assets = await parseAssetsTokens(fileResponse.data)
-    
-        downloadAssets(
-            assets,
-            {
-                client: client,
-                assetsFolder: assetsFolder,
-                fileId: fileId
-            }
-        )
+
+        await downloadAssets(assets, {
+            client: client,
+            assetsFolder: assetsFolder,
+            fileId: fileId
+        })
+
+        let stylesFolder = assetsFolder.concat("/styles")
+        if(!existsSync(stylesFolder))
+            mkdirSync(stylesFolder)
+
+        console.log("\n", chalk.greenBright("CSS"))
+        let colorsCss = colorsToCss(designTokens).render()
+        console.log(chalk.bold(colorsCss))
+        writeFileSync(stylesFolder.concat("/colors.css"), colorsCss)
+
+        let textCss = textStylesToCss(designTokens).map(style => style.render()).join("\n")
+        console.log(chalk.bold(textCss))
+
+        writeFileSync(stylesFolder.concat("/text.css"), textCss)
+
     } else {
         let message = chalk.red(`<ca092e5b> Can't retrieve file from Figma`)
         exit(1, Error(message))

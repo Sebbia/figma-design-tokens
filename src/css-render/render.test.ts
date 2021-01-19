@@ -1,4 +1,4 @@
-import { CssClass, CssProperty, CssVariableImpl, CssVariableSpecification, css } from './Modules'
+import { CssClass, CssProperty, CssVariableImpl, CssVariableSpecification, css } from './modules'
 
 test("Test css render", () => {
     let simpleClass = new CssClass("testClass", [
@@ -30,7 +30,7 @@ test("Test css render", () => {
 }`)
 
     let complexClassFunctional = css.useBlock(
-        ["test"],
+        "test",
         css.useClass("testClass", [
             css.declareVar("my-color-var", "#000000"),
             css.property("color", css.useVar("my-color-var")),

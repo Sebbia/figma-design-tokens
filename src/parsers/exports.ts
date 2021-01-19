@@ -1,7 +1,8 @@
 import fs from 'fs';
 import * as Figma from 'figma-js';
 import { findAllRecursive } from '../tools/recursiveSearch';
-import { downloadFile, normalizeFileName } from '../tools/download';
+import { downloadFile } from '../tools/download';
+import { normalizeStyleName } from '../tools/utils'
 import chalk from 'chalk';
 
 export async function parseAssetsTokens(data: Figma.FileResponse): Promise<Figma.Node[]> {
@@ -21,8 +22,6 @@ export async function parseAssetsTokens(data: Figma.FileResponse): Promise<Figma
             return false
         }
     }, true)
-
-    // debug(nodesWithExports)
 
     return nodesWithExports
 }
@@ -63,7 +62,7 @@ export async function downloadAssets(
             case 'SCALE': scale = exportSetting.constraint.value
         }
 
-        let filename = `${params.assetsFolder}/${normalizeFileName(exportSetting.name)}${exportSetting.suffix}.${format}`
+        let filename = `${params.assetsFolder}/${normalizeStyleName(exportSetting.name)}${exportSetting.suffix}.${format}`
 
         try {
             let response = await params.client.fileImages(params.fileId, {
@@ -77,7 +76,7 @@ export async function downloadAssets(
             let url = response.data.images[exportSetting.id]
             await downloadFile(url, filename)
             console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
-        } catch(e) {
+        } catch (e) {
             console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
         }
     })
