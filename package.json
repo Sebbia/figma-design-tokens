@@ -2,7 +2,13 @@
   "name": "figma-design-tokens",
   "version": "0.0.0",
   "description": "Simple tool for export Figma design tokens",
-  "keywords": ["figma", "export", "design", "assets", "styles"],
+  "keywords": [
+    "figma",
+    "export",
+    "design",
+    "assets",
+    "styles"
+  ],
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -21,7 +27,6 @@
     "chalk": "^4.1.0",
     "figma-js": "^1.13.0",
     "node-fetch": "2.6.1",
-    "react": "^17.0.1",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
