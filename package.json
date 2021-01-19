@@ -1,0 +1,37 @@
+{
+  "name": "figma-design-tokens",
+  "version": "0.0.0",
+  "description": "Simple tool for export Figma design tokens",
+  "keywords": ["figma", "export", "design", "assets", "styles"],
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && jest"
+  },
+  "author": "Anatoly Nechay-Gumen (becklime@gmail.com)",
+  "license": "ISC",
+  "bin": {
+    "figma-design-tokens": "./bin/figma-design-tokens"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sebbia/figma-design-tokens.git"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "figma-js": "^1.13.0",
+    "node-fetch": "2.6.1",
+    "react": "^17.0.1",
+    "yargs": "^16.2.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.20",
+    "@types/node": "^14.14.20",
+    "@types/node-fetch": "^2.5.8",
+    "@types/yargs": "^15.0.12",
+    "jest": "^26.6.3",
+    "object-assign": "^4.1.1",
+    "ts-jest": "^26.4.4",
+    "typescript": "4.1.3"
+  }
+}
