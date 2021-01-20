@@ -2,7 +2,7 @@
 type FilterComparator<T> = (element: T, index: number, array: T[]) => boolean
 
 export function unique<T, R>(uniqueBy: (value: T) => R): FilterComparator<T> {
-    let comparator = (element: T, index: number, array: T[]): boolean => {
+    const comparator = (element: T, index: number, array: T[]): boolean => {
         return array.findIndex((value) => uniqueBy(value) == uniqueBy(element)) == index
     }
 

@@ -6,7 +6,7 @@ import { normalizeStyleName } from '../tools/utils'
 import chalk from 'chalk';
 
 export async function parseAssetsTokens(data: Figma.FileResponse): Promise<Figma.Node[]> {
-    let assetsTokensHolders =
+    const assetsTokensHolders =
         (
             data.document
                 .children
@@ -15,7 +15,7 @@ export async function parseAssetsTokens(data: Figma.FileResponse): Promise<Figma
         ).children.filter(x => x.type != 'TEXT')
 
 
-    let nodesWithExports = findAllRecursive(assetsTokensHolders, (holder) => {
+    const nodesWithExports = findAllRecursive(assetsTokensHolders, (holder) => {
         if ('exportSettings' in holder && holder.exportSettings) {
             return true
         } else {
@@ -34,9 +34,9 @@ export async function downloadAssets(
         assetsFolder: string
     }
 ) {
-    let exports = assets.flatMap(asset => {
+    const exports = assets.flatMap(asset => {
         // TODO: Fix types, add type guard for exportSettings field
-        let exportSettings = (asset as Figma.Rectangle).exportSettings
+        const exportSettings = (asset as Figma.Rectangle).exportSettings
         return exportSettings ? exportSettings?.map(setting => {
             return {
                 id: asset.id,
@@ -62,10 +62,10 @@ export async function downloadAssets(
             case 'SCALE': scale = exportSetting.constraint.value
         }
 
-        let filename = `${params.assetsFolder}/${normalizeStyleName(exportSetting.name)}${exportSetting.suffix}.${format}`
+        const filename = `${params.assetsFolder}/${normalizeStyleName(exportSetting.name)}${exportSetting.suffix}.${format}`
 
         try {
-            let response = await params.client.fileImages(params.fileId, {
+            const response = await params.client.fileImages(params.fileId, {
                 ids: [exportSetting.id],
                 format: format,
                 scale: scale
@@ -73,7 +73,7 @@ export async function downloadAssets(
             // debug(response.data)
             if (!fs.existsSync(params.assetsFolder))
                 fs.mkdirSync(params.assetsFolder)
-            let url = response.data.images[exportSetting.id]
+            const url = response.data.images[exportSetting.id]
             await downloadFile(url, filename)
             console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
         } catch (e) {

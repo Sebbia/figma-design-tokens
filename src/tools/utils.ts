@@ -1,5 +1,5 @@
 export function floor(value: number, places: number = 2): number {
-    let p = Math.pow(10, places)
+    const p = Math.pow(10, places)
     return Math.floor(value * p) / p
 }
 

@@ -8,7 +8,7 @@ import { StyleObj } from 'types';
 
 
 export async function parseDesignTokens(data: Figma.FileResponse): Promise<StyleObj[]> {
-    let designTokensHolders =
+    const designTokensHolders =
         (
             data.document
                 .children
@@ -16,10 +16,10 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
                 .find(x => x.name == 'DesignTokens') as Figma.Canvas
         ).children.filter(x => x.type != 'TEXT')
 
-    let designTokensMap = Object.keys(data.styles).flatMap(style => {
-        let styleInfo = data.styles[style]
+    const designTokensMap = Object.keys(data.styles).flatMap(style => {
+        const styleInfo = data.styles[style]
 
-        let nodesWithStyles = findAllRecursive(designTokensHolders, (holder) => {
+        const nodesWithStyles = findAllRecursive(designTokensHolders, (holder) => {
             if ('styles' in holder && holder.styles) {
                 return true
             } else {
@@ -27,9 +27,9 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
             }
         }, true)
 
-        let stylesMap = nodesWithStyles.flatMap((x) => {
+        const stylesMap = nodesWithStyles.flatMap((x) => {
             // TODO: Fix types, add type guard for styles field
-            let styles = (x as Figma.Rectangle).styles
+            const styles = (x as Figma.Rectangle).styles
             let styleType = null;
             if (styles) {
                 for (const [key, value] of Object.entries(styles)) {
@@ -61,7 +61,7 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
 
                 case "strokes":
                 case "stroke": {
-                    let vect = (x as Figma.Vector)
+                    const vect = (x as Figma.Vector)
                     return {
                         "styleType": styleInfo.styleType,
                         "styleName": style,
@@ -98,7 +98,7 @@ export function printDesignTokens(designTokens: StyleObj[]) {
         style as StyleObj
         switch (style?.styleType) {
             case 'FILL': {
-                let c = (style?.value as Figma.Paint).color
+                const c = (style?.value as Figma.Paint).color
                 if (c)
                     console.log(
                         chalk.bold(style?.styleObj.name),
@@ -109,7 +109,7 @@ export function printDesignTokens(designTokens: StyleObj[]) {
             }
 
             case 'TEXT': {
-                let t = (style?.value as Figma.TypeStyle)
+                const t = (style?.value as Figma.TypeStyle)
                 if (t) {
                     let lineHeight: number;
                     let lineHeightUnit: 'px' | '%';
