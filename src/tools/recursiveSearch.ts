@@ -1,13 +1,14 @@
 import { ensureArray } from "./listTools"
+import { isArray, isKeyOfObject } from "./utils"
 
-export function findAllRecursive<T>(list: readonly T[], checkWith: (obj: T) => boolean, keepWalking: boolean = false, childFields: string | string[] = "children"): T[] {
+export function findAllRecursive<T extends Object>(list: readonly T[], checkWith: (obj: T) => boolean, keepWalking: boolean = false, childFields: string | string[] = "children"): T[] {
     const childKeys = ensureArray(childFields)
     return list.flatMap((obj) => {
 
         const walkDeeper = (): T[] => {
             return childKeys.flatMap((childKey) => {
-                if (Object.keys(obj).includes(childKey) && (obj as any)[childKey] && Array.isArray((obj as any)[childKey])) {
-                    return findAllRecursive((obj as any)[childKey] as T[], checkWith, keepWalking, childKey)
+                if (isKeyOfObject(obj, childKey) && obj[childKey] && isArray(obj[childKey])) {
+                    return findAllRecursive((obj as any)[childKey], checkWith, keepWalking, childKey)
                 } else {
                     return []
                 }

@@ -20,13 +20,11 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
     const designTokensMap = Object.keys(data.styles).flatMap(style => {
         const styleInfo = data.styles[style]
 
-        const nodesWithStyles = findAllRecursive(designTokensHolders, (holder) => {
-            if ('styles' in holder && holder.styles) {
-                return true
-            } else {
-                return false
-            }
-        }, true)
+        const nodesWithStyles = findAllRecursive(
+            designTokensHolders,
+            (holder) => 'styles' in holder && Boolean(holder.styles),
+            true
+        )
 
         const stylesMap = nodesWithStyles.flatMap((x) => {
             // TODO: Fix types, add type guard for styles field
