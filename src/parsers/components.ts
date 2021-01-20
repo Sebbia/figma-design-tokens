@@ -2,6 +2,7 @@ import * as Figma from 'figma-js'
 import { ExtendedNodeType } from '../types'
 import { byKey, byNullableStringParameter } from '../tools/listTools';
 import { findAllRecursive } from '../tools/recursiveSearch';
+import chalk from 'chalk';
 
 export async function parseComponents(data: Figma.FileResponse): Promise<Figma.Node[]> {
     const componentsHolder =
@@ -24,6 +25,7 @@ export async function parseComponents(data: Figma.FileResponse): Promise<Figma.N
 }
 
 export async function printComponents(components: Figma.Node[]) {
+    console.log(chalk.greenBright(`\Receive ${components.length} components:`))
     // debug(components)
     console.table(components.map(x => {
         // TODO: Fix types, add type guard for children field

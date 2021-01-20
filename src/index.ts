@@ -73,15 +73,20 @@ async function main() {
         if(!existsSync(stylesFolder))
             mkdirSync(stylesFolder)
 
-        console.log("\n", chalk.greenBright("CSS"))
+        console.log("\n", chalk.greenBright("Produced CSS"))
+
+        const colorStylesFileName = "colors.css"
+        console.log("\n", chalk.greenBright(chalk.bold(colorStylesFileName)))
         const colorsCss = colorsToCss(designTokens).render()
         console.log(chalk.bold(colorsCss))
-        writeFileSync(stylesFolder.concat("/colors.css"), colorsCss)
+        writeFileSync(stylesFolder.concat("/".concat(colorStylesFileName)), colorsCss)
 
+        const textStylesFileName = "text.css"
+        console.log("\n", chalk.greenBright(chalk.bold(textStylesFileName)))
         const textCss = textStylesToCss(designTokens).map(style => style.render()).join("\n")
         console.log(chalk.bold(textCss))
 
-        writeFileSync(stylesFolder.concat("/text.css"), textCss)
+        writeFileSync(stylesFolder.concat("/".concat(textStylesFileName)), textCss)
 
     } else {
         const message = chalk.red(`<ca092e5b> Can't retrieve file from Figma`)

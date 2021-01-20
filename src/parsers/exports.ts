@@ -33,7 +33,7 @@ export async function downloadAssets(
         fileId: string,
         assetsFolder: string
     }
-) {
+): Promise<void[]> {
     const exports = assets.flatMap(asset => {
         // TODO: Fix types, add type guard for exportSettings field
         const exportSettings = (asset as Figma.Rectangle).exportSettings
@@ -48,36 +48,40 @@ export async function downloadAssets(
         }) : []
     })
 
-    exports.forEach(async exportSetting => {
-        let format: Figma.exportFormatOptions;
-        switch (exportSetting.format) {
-            case 'JPG': format = 'jpg'; break;
-            case 'PDF': format = 'pdf'; break;
-            case 'PNG': format = 'png'; break;
-            case 'SVG': format = 'svg'; break;
-        }
+    console.log(chalk.greenBright(`\nLoad ${exports.length} assets:`))
+    const promise = Promise.all(
+        exports.map(async exportSetting => {
+            let format: Figma.exportFormatOptions;
+            switch (exportSetting.format) {
+                case 'JPG': format = 'jpg'; break;
+                case 'PDF': format = 'pdf'; break;
+                case 'PNG': format = 'png'; break;
+                case 'SVG': format = 'svg'; break;
+            }
 
-        let scale = undefined;
-        switch (exportSetting.constraint.type) {
-            case 'SCALE': scale = exportSetting.constraint.value
-        }
+            let scale = undefined;
+            switch (exportSetting.constraint.type) {
+                case 'SCALE': scale = exportSetting.constraint.value
+            }
 
-        const filename = `${params.assetsFolder}/${normalizeStyleName(exportSetting.name)}${exportSetting.suffix}.${format}`
+            const filename = `${params.assetsFolder}/${normalizeStyleName(exportSetting.name)}${exportSetting.suffix}.${format}`
 
-        try {
-            const response = await params.client.fileImages(params.fileId, {
-                ids: [exportSetting.id],
-                format: format,
-                scale: scale
-            })
-            // debug(response.data)
-            if (!fs.existsSync(params.assetsFolder))
-                fs.mkdirSync(params.assetsFolder)
-            const url = response.data.images[exportSetting.id]
-            await downloadFile(url, filename)
-            console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
-        } catch (e) {
-            console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
-        }
-    })
+            try {
+                const response = await params.client.fileImages(params.fileId, {
+                    ids: [exportSetting.id],
+                    format: format,
+                    scale: scale
+                })
+                // debug(response.data)
+                if (!fs.existsSync(params.assetsFolder))
+                    fs.mkdirSync(params.assetsFolder)
+                const url = response.data.images[exportSetting.id]
+                await downloadFile(url, filename)
+                console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
+            } catch (e) {
+                console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
+            }
+        })
+    )
+    return promise
 }

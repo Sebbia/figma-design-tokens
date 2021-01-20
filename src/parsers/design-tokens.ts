@@ -1,6 +1,6 @@
 import * as Figma from 'figma-js';
 import chalk from 'chalk';
-import { byKey, byNullableStringParameter, unique } from '../tools/listTools';
+import { byKey, byNullableStringParameter, groupBy, unique } from '../tools/listTools';
 import { findAllRecursive } from '../tools/recursiveSearch';
 import debug from '../tools/debug';
 import { convertColor, floor } from '../tools/utils';
@@ -39,6 +39,7 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
             }
 
             switch (styleType?.toLowerCase()) {
+                case 'fills':
                 case "fill": {
                     return {
                         "styleType": styleInfo.styleType,
@@ -73,7 +74,6 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
                         }
                     }
                 }
-                case 'fills':
                 case null:
                 case undefined: {
                     return null
@@ -93,49 +93,60 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
     return designTokensMap
 }
 
-export function printDesignTokens(designTokens: StyleObj[]) {
-    designTokens.forEach(style => {
-        style as StyleObj
-        switch (style?.styleType) {
-            case 'FILL': {
-                const c = (style?.value as Figma.Paint).color
-                if (c)
-                    console.log(
-                        chalk.bold(style?.styleObj.name),
-                        "\n",
-                        chalk.rgb(convertColor(c.r), convertColor(c.g), convertColor(c.b)).underline("██████████████████")
-                    )
-                break;
-            }
+function printFill(name: string, style: Figma.Paint) {
+    const c = style.color
+    if (c)
+        console.log(
+            chalk.bold(name),
+            "\n",
+            chalk.rgb(convertColor(c.r), convertColor(c.g), convertColor(c.b)).underline("██████████████████")
+        )
+}
 
+function printTextStyle(name: string, style: Figma.TypeStyle) {
+    let lineHeight: number;
+    let lineHeightUnit: 'px' | '%';
+    switch (style.lineHeightUnit) {
+        case 'FONT_SIZE_%': {
+            lineHeight = style.lineHeightPercentFontSize ? floor(style.lineHeightPercentFontSize) : 100
+            lineHeightUnit = '%'
+            break;
+        };
+        case 'PIXELS': {
+            lineHeight = floor(style.lineHeightPx)
+            lineHeightUnit = 'px'
+            break;
+        };
+        case 'INTRINSIC_%': {
+            lineHeight = style.lineHeightPercentFontSize ? floor(style.lineHeightPercentFontSize) : 100
+            lineHeightUnit = '%'
+            break;
+        }
+    }
+    console.log(
+        chalk.bold(name),
+        "\n",
+        `${style.fontFamily} ${style.fontSize}px \n\tWeight: ${style.fontWeight}; \n\tLine height: ${lineHeight}${lineHeightUnit}`
+    )
+}
+
+export function printDesignTokens(designTokens: StyleObj[]) {
+    console.log(chalk.greenBright(`\nReceive ${designTokens.length} design tokens`))
+    groupBy(designTokens, token => token.styleType).forEach((styles, styleType) => {
+        switch (styleType) {
+            case 'FILL': {
+                console.log(chalk.greenBright(`\n ${styles.length} color styles:`))
+                styles.map(style => {
+                    printFill(style?.styleObj.name, style.value as Figma.Paint)
+                })
+                break;
+            };
             case 'TEXT': {
-                const t = (style?.value as Figma.TypeStyle)
-                if (t) {
-                    let lineHeight: number;
-                    let lineHeightUnit: 'px' | '%';
-                    switch (t.lineHeightUnit) {
-                        case 'FONT_SIZE_%': {
-                            lineHeight = t.lineHeightPercentFontSize ? floor(t.lineHeightPercentFontSize) : 100
-                            lineHeightUnit = '%'
-                            break;
-                        };
-                        case 'PIXELS': {
-                            lineHeight = floor(t.lineHeightPx)
-                            lineHeightUnit = 'px'
-                            break;
-                        };
-                        case 'INTRINSIC_%': {
-                            lineHeight = t.lineHeightPercentFontSize ? floor(t.lineHeightPercentFontSize) : 100
-                            lineHeightUnit = '%'
-                            break;
-                        }
-                    }
-                    console.log(
-                        chalk.bold(style?.styleObj.name),
-                        "\n",
-                        `${t.fontFamily} ${t.fontSize}px \n\tWeight: ${t.fontWeight}; \n\tLine height: ${lineHeight}${lineHeightUnit}`
-                    )
-                }
+                console.log(chalk.greenBright(`\n ${styles.length} text styles:`))
+                styles.map(style => {
+                    printTextStyle(style?.styleObj.name, style.value as Figma.TypeStyle)
+                })
+                break;
             }
         }
     })
