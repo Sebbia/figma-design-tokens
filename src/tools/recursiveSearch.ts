@@ -1,6 +1,6 @@
 import { ensureArray } from "./listTools"
 
-export function findAllRecursive<T>(list: T[], checkWith: (obj: T) => boolean, keepWalking: boolean = false, childFields: string | string[] = "children"): T[] {
+export function findAllRecursive<T>(list: readonly T[], checkWith: (obj: T) => boolean, keepWalking: boolean = false, childFields: string | string[] = "children"): T[] {
     const childKeys = ensureArray(childFields)
     return list.flatMap((obj) => {
 

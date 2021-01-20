@@ -57,11 +57,31 @@ export function textStylesToCss(designTokens: StyleObj[]): CssModule[] {
         }
         const lineHeightValue = `${lineHeight}${lineHeightUnit}`
 
+        let textAllign: 'left' | 'right' | 'center' | 'justify' | 'start' | 'end' = 'left'
+        switch (style.textAlignHorizontal) {
+            case 'LEFT': textAllign = 'left'; break;
+            case 'RIGHT': textAllign = 'right'; break;
+            case 'CENTER': textAllign = 'center'; break;
+            case 'JUSTIFIED': textAllign = 'justify'; break;
+        }
+
+        let allignItems: 'normal' | 'stretch' | 'center' | 'start' | 'end' | 'flex-start' | 'flex-end' = 'normal'
+        switch (style.textAlignVertical) {
+            case 'BOTTOM': allignItems = 'end'; break;
+            case 'CENTER': allignItems = 'center'; break;
+            case 'TOP': allignItems = 'start'; break;
+        }
+
+        let letterSpacing = style.letterSpacing == 0 ? 'normal' : `${floor(style.letterSpacing)}px`
+
         const properties = [
             css.property('font-family', style.fontPostScriptName),
             css.property('font-weight', style.fontWeight),
             css.property('font-size', style.fontSize),
             css.property('line-height', lineHeightValue),
+            css.property('letter-spacing', letterSpacing),
+            css.property('text-align', textAllign),
+            css.property('align-items', allignItems)
         ]
 
         const styleClass = css.useClass(className, properties)

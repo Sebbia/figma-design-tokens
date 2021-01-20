@@ -14,7 +14,8 @@ export async function parseDesignTokens(data: Figma.FileResponse): Promise<Style
                 .children
                 // TODO: Fix types, add type guard for children field
                 .find(x => x.name == 'DesignTokens') as Figma.Canvas
-        ).children.filter(x => x.type != 'TEXT')
+        ).children
+        // .filter(x => x.type != 'TEXT')
 
     const designTokensMap = Object.keys(data.styles).flatMap(style => {
         const styleInfo = data.styles[style]
