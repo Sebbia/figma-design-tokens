@@ -18,10 +18,10 @@ export abstract class CssModule implements BaseRenderComponent {
 export class CssBlock extends CssModule {
     selectors: string[];
     children: BaseRenderComponent[];
-    constructor(selectors: string[], childrens: BaseRenderComponent[]) {
+    constructor(selectors: string[], children: BaseRenderComponent[]) {
         super()
         this.selectors = selectors
-        this.children = childrens
+        this.children = children
     };
 }
 
@@ -34,10 +34,10 @@ export class CssClass extends CssModule {
 
     children: BaseRenderComponent[] = [];
 
-    constructor(name: string, childrens: BaseRenderComponent[] = []) {
+    constructor(name: string, children: BaseRenderComponent[] = []) {
         super()
         this.name = name
-        this.children = childrens
+        this.children = children
     };
 }
 
@@ -115,16 +115,16 @@ export class CssFunction implements BaseRenderComponent {
 export namespace css {
     export function useBlock(
         selectors: string[] | string,
-        childrens: BaseRenderComponent[] | BaseRenderComponent
+        children: BaseRenderComponent[] | BaseRenderComponent
     ): CssBlock {
-        return new CssBlock(ensureArray(selectors), ensureArray(childrens))
+        return new CssBlock(ensureArray(selectors), ensureArray(children))
     }
 
     export function useClass(
         name: string,
-        childrens: BaseRenderComponent[] | BaseRenderComponent
+        children: BaseRenderComponent[] | BaseRenderComponent
     ): CssClass {
-        return new CssClass(name, ensureArray(childrens))
+        return new CssClass(name, ensureArray(children))
     }
 
     export function property(
