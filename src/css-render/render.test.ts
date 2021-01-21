@@ -1,12 +1,12 @@
-import { CssClass, CssProperty, CssVariableImpl, CssVariableSpecification, css } from './Modules'
+import { CssClass, CssProperty, CssVariableImpl, CssVariableSpecification, css } from './modules'
 
 test("Test css render", () => {
-    let simpleClass = new CssClass("testClass", [
+    const simpleClass = new CssClass("testClass", [
         new CssProperty("color", "#000000"),
         new CssProperty("font-size", "15px")
     ]);
 
-    let simpleRender = simpleClass.render()
+    const simpleRender = simpleClass.render()
     expect(simpleRender).toBe(
         `.testClass {
     color: #000000;
@@ -14,13 +14,13 @@ test("Test css render", () => {
 }`
     )
 
-    let complexClass = new CssClass("testClass", [
+    const complexClass = new CssClass("testClass", [
         new CssVariableSpecification("my-color-var", "#000000"),
         new CssProperty("color", new CssVariableImpl("my-color-var")),
         new CssProperty("color", new CssVariableImpl("my-color-var", "#000000")),
         new CssProperty("font-size", "15px")
     ]);
-    let complexRender = complexClass.render()
+    const complexRender = complexClass.render()
     expect(complexRender).toBe(
         `.testClass {
     --my-color-var: #000000;
@@ -29,8 +29,8 @@ test("Test css render", () => {
     font-size: 15px;
 }`)
 
-    let complexClassFunctional = css.useBlock(
-        ["test"],
+    const complexClassFunctional = css.useBlock(
+        "test",
         css.useClass("testClass", [
             css.declareVar("my-color-var", "#000000"),
             css.property("color", css.useVar("my-color-var")),
@@ -38,7 +38,7 @@ test("Test css render", () => {
             css.property("font-size", "15px")
         ])
     );
-    let complexFunctionalRender = complexClassFunctional.render()
+    const complexFunctionalRender = complexClassFunctional.render()
     expect(complexFunctionalRender).toBe(
 `test {
     .testClass {

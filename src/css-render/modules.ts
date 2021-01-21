@@ -9,19 +9,19 @@ function indent(value: string, indentation: number = 4): string {
 
 export abstract class CssModule implements BaseRenderComponent {
     abstract readonly selectors: string[];
-    childrens: BaseRenderComponent[] = [];
+    children: BaseRenderComponent[] = [];
     render = (): string => {
-        return `${this.selectors.join(' ')} {\n${indent(this.childrens?.map(c => c.render()).join('\n'))}\n}`
+        return `${this.selectors.join(' ')} {\n${indent(this.children?.map(c => c.render()).join('\n'))}\n}`
     };
 }
 
 export class CssBlock extends CssModule {
     selectors: string[];
-    childrens: BaseRenderComponent[];
-    constructor(selectors: string[], childrens: BaseRenderComponent[]) {
+    children: BaseRenderComponent[];
+    constructor(selectors: string[], children: BaseRenderComponent[]) {
         super()
         this.selectors = selectors
-        this.childrens = childrens
+        this.children = children
     };
 }
 
@@ -32,12 +32,12 @@ export class CssClass extends CssModule {
         return [`.${this.name}`]
     };
 
-    childrens: BaseRenderComponent[] = [];
+    children: BaseRenderComponent[] = [];
 
-    constructor(name: string, childrens: BaseRenderComponent[] = []) {
+    constructor(name: string, children: BaseRenderComponent[] = []) {
         super()
         this.name = name
-        this.childrens = childrens
+        this.children = children
     };
 }
 
@@ -98,19 +98,33 @@ export class CssVariableImpl implements BaseRenderComponent {
     }
 }
 
+export class CssFunction implements BaseRenderComponent {
+    readonly name: string;
+    readonly args?: RenderedItem[]
+
+    constructor(name: string, args?: RenderedItem[]) {
+        this.name = name
+        this.args = args
+    }
+
+    render(): string {
+        return `${this.name}(${this.args ? this.args.map(i => itemToString(i)) : ''})`
+    }
+}
+
 export namespace css {
     export function useBlock(
-        selectors: string[],
-        childrens: BaseRenderComponent[] | BaseRenderComponent
+        selectors: string[] | string,
+        children: BaseRenderComponent[] | BaseRenderComponent
     ): CssBlock {
-        return new CssBlock(ensureArray(selectors), ensureArray(childrens))
+        return new CssBlock(ensureArray(selectors), ensureArray(children))
     }
 
     export function useClass(
         name: string,
-        childrens: BaseRenderComponent[] | BaseRenderComponent
+        children: BaseRenderComponent[] | BaseRenderComponent
     ): CssClass {
-        return new CssClass(name, ensureArray(childrens))
+        return new CssClass(name, ensureArray(children))
     }
 
     export function property(
@@ -132,5 +146,12 @@ export namespace css {
         defaultValue?: RenderedItem
     ): CssVariableImpl {
         return new CssVariableImpl(name, defaultValue)
+    }
+
+    export function fun(
+        name: string, 
+        args?: RenderedItem[]
+    ): CssVariableImpl {
+        return new CssFunction(name, args)
     }
 }

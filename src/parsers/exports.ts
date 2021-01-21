@@ -1,11 +1,12 @@
 import fs from 'fs';
 import * as Figma from 'figma-js';
 import { findAllRecursive } from '../tools/recursiveSearch';
-import { downloadFile, normalizeFileName } from '../tools/download';
+import { downloadFile } from '../tools/download';
+import { normalizeStyleName } from '../tools/utils'
 import chalk from 'chalk';
 
 export async function parseAssetsTokens(data: Figma.FileResponse): Promise<Figma.Node[]> {
-    let assetsTokensHolders =
+    const assetsTokensHolders =
         (
             data.document
                 .children
@@ -14,15 +15,13 @@ export async function parseAssetsTokens(data: Figma.FileResponse): Promise<Figma
         ).children.filter(x => x.type != 'TEXT')
 
 
-    let nodesWithExports = findAllRecursive(assetsTokensHolders, (holder) => {
+    const nodesWithExports = findAllRecursive(assetsTokensHolders, (holder) => {
         if ('exportSettings' in holder && holder.exportSettings) {
             return true
         } else {
             return false
         }
     }, true)
-
-    // debug(nodesWithExports)
 
     return nodesWithExports
 }
@@ -34,10 +33,10 @@ export async function downloadAssets(
         fileId: string,
         assetsFolder: string
     }
-) {
-    let exports = assets.flatMap(asset => {
+): Promise<void[]> {
+    const exports = assets.flatMap(asset => {
         // TODO: Fix types, add type guard for exportSettings field
-        let exportSettings = (asset as Figma.Rectangle).exportSettings
+        const exportSettings = (asset as Figma.Rectangle).exportSettings
         return exportSettings ? exportSettings?.map(setting => {
             return {
                 id: asset.id,
@@ -49,36 +48,40 @@ export async function downloadAssets(
         }) : []
     })
 
-    exports.forEach(async exportSetting => {
-        let format: Figma.exportFormatOptions;
-        switch (exportSetting.format) {
-            case 'JPG': format = 'jpg'; break;
-            case 'PDF': format = 'pdf'; break;
-            case 'PNG': format = 'png'; break;
-            case 'SVG': format = 'svg'; break;
-        }
+    console.log(chalk.greenBright(`\nLoad ${exports.length} assets:`))
+    const promise = Promise.all(
+        exports.map(async exportSetting => {
+            let format: Figma.exportFormatOptions;
+            switch (exportSetting.format) {
+                case 'JPG': format = 'jpg'; break;
+                case 'PDF': format = 'pdf'; break;
+                case 'PNG': format = 'png'; break;
+                case 'SVG': format = 'svg'; break;
+            }
 
-        let scale = undefined;
-        switch (exportSetting.constraint.type) {
-            case 'SCALE': scale = exportSetting.constraint.value
-        }
+            let scale = undefined;
+            switch (exportSetting.constraint.type) {
+                case 'SCALE': scale = exportSetting.constraint.value
+            }
 
-        let filename = `${params.assetsFolder}/${normalizeFileName(exportSetting.name)}${exportSetting.suffix}.${format}`
+            const filename = `${params.assetsFolder}/${normalizeStyleName(exportSetting.name)}${exportSetting.suffix}.${format}`
 
-        try {
-            let response = await params.client.fileImages(params.fileId, {
-                ids: [exportSetting.id],
-                format: format,
-                scale: scale
-            })
-            // debug(response.data)
-            if (!fs.existsSync(params.assetsFolder))
-                fs.mkdirSync(params.assetsFolder)
-            let url = response.data.images[exportSetting.id]
-            await downloadFile(url, filename)
-            console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
-        } catch(e) {
-            console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
-        }
-    })
+            try {
+                const response = await params.client.fileImages(params.fileId, {
+                    ids: [exportSetting.id],
+                    format: format,
+                    scale: scale
+                })
+                // debug(response.data)
+                if (!fs.existsSync(params.assetsFolder))
+                    fs.mkdirSync(params.assetsFolder)
+                const url = response.data.images[exportSetting.id]
+                await downloadFile(url, filename)
+                console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
+            } catch (e) {
+                console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
+            }
+        })
+    )
+    return promise
 }

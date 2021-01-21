@@ -1,10 +1,12 @@
 import * as Figma from 'figma-js'
-import { ExtendedNodeType } from '../types'
+import { ExtendedNodeType, StyleObj } from '../types'
 import { byKey, byNullableStringParameter } from '../tools/listTools';
 import { findAllRecursive } from '../tools/recursiveSearch';
+import chalk from 'chalk';
+// import debug from '../tools/debug';
 
 export async function parseComponents(data: Figma.FileResponse): Promise<Figma.Node[]> {
-    let componentsHolder =
+    const componentsHolder =
         (
             data.document
                 .children
@@ -12,7 +14,7 @@ export async function parseComponents(data: Figma.FileResponse): Promise<Figma.N
                 .find(x => x.name == 'Components') as Figma.Canvas
         ).children.filter(x => x.type != 'TEXT')
 
-    let components = findAllRecursive(componentsHolder, (token) => {
+    const components = findAllRecursive(componentsHolder, (token) => {
         if (token.type == 'COMPONENT' || token.type as ExtendedNodeType == 'COMPONENT_SET') {
             return true
         } else {
@@ -23,20 +25,20 @@ export async function parseComponents(data: Figma.FileResponse): Promise<Figma.N
     return components
 }
 
-export async function printComponents(components: Figma.Node[]) {
-    // debug(components)
+export async function printComponents(components: Figma.Node[], styles: StyleObj[]) {
+    console.log(chalk.greenBright(`\nReceive ${components.length} components:`))
+    // debug(components.find(it => it.name == 'button'))
     console.table(components.map(x => {
         // TODO: Fix types, add type guard for children field
-        let subComponents = findAllRecursive((x as Figma.Component).children as Figma.Component[], (token) => {
-            if (token.type == 'COMPONENT' || token.type as ExtendedNodeType == 'COMPONENT_SET') {
-                return true
-            } else {
-                return false
-            }
-        }, true)
+        const subComponents = findAllRecursive(
+            (x as Figma.Component).children as Figma.Component[],
+            token => token.type == 'COMPONENT' || token.type as ExtendedNodeType == 'COMPONENT_SET',
+            true
+        )
         return {
             name: x.name,
-            subComponents: subComponents.length > 0 ? subComponents.reduce((p, v, i) => `${v.name}${p ? ', ' + p : ''}`, '') : null
+            subComponents: subComponents.length > 0 ? subComponents.reduce((p, v, i) => `${v.name}${p ? ', ' + p : ''}`, '') : null,
+            styles: (x as Figma.Rectangle).styles || null
         }
     }))
 }

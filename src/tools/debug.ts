@@ -1,5 +1,7 @@
-import util from 'util'
+import { inspect as insp } from 'util'
+
+export function inspect(obj: any, depth: number): string { return insp(obj, { colors: true, depth: depth }) }
 
 export default function debug(obj: any, depth: number = 10): void {
-    console.debug(util.inspect(obj, { colors: true, depth: depth }))
+    console.debug(inspect(obj, depth))
 }
