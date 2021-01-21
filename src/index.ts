@@ -56,11 +56,11 @@ async function main() {
 
     const fileResponse = await client.file(fileId)
     if (fileResponse.status == 200) {
-        const components = await parseComponents(fileResponse.data)
-        printComponents(components)
-
         const designTokens = await parseDesignTokens(fileResponse.data)
         printDesignTokens(designTokens)
+
+        const components = await parseComponents(fileResponse.data)
+        printComponents(components, designTokens)
         const assets = await parseAssetsTokens(fileResponse.data)
 
         await downloadAssets(assets, {

@@ -15,6 +15,10 @@ export function isKeyOfObject<T extends Object>(obj: T, key: any): key is keyof 
     return obj.hasOwnProperty(key)
 }
 
-export function isArray<T>(obj: any): obj is Array<T> {
+export function isArray<T>(obj: any): obj is T[] {
     return Array.isArray(obj)
+}
+
+export function isNotNull<T>(value?: T): value is Exclude<T, null> {
+    return value !== null && value !== undefined
 }
