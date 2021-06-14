@@ -7,13 +7,13 @@ import { convertColor, floor, isNotNull } from '../tools/utils';
 import { StyleObj } from 'types';
 
 
-export async function parseDesignTokens(data: Figma.FileResponse): Promise<StyleObj[]> {
+export async function parseDesignTokens(data: Figma.FileResponse, canvasName: string): Promise<StyleObj[]> {
     const designTokensHolders =
         (
             data.document
                 .children
                 // TODO: Fix types, add type guard for children field
-                .find(x => x.name == 'DesignTokens') as Figma.Canvas
+                .find(x => x.name == canvasName) as Figma.Canvas
         ).children
     // .filter(x => x.type != 'TEXT')
 

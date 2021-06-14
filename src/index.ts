@@ -5,9 +5,13 @@ import * as Figma from 'figma-js';
 import { parseDesignTokens, printDesignTokens } from './parsers/design-tokens';
 import { parseComponents, printComponents } from './parsers/components';
 import { downloadAssets, parseAssetsTokens } from './parsers/exports';
-import { colorsToCss, textStylesToCss } from './transormers/figma-to-css'
+import { colorsToCss, parseColors, textStylesToCss } from './transormers/figma-to-css'
 import chalk from "chalk";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { writeFileSync } from "fs";
+import { replaceSvgColors } from "./transormers/svg-to-styled";
+import path from "path";
+import { ensureDirExists } from "./tools/utils";
+import { makeStyledComponentFromSvgFile } from "./transormers/styled-svg-to-rc";
 
 
 const cmdLineParser = yargs
@@ -32,6 +36,13 @@ const cmdLineParser = yargs
         nargs: 1,
         type: "string",
     })
+    .option("n", {
+        alias: "name",
+        describe: "Figma design canvas name to parse",
+        nargs: 1,
+        default: "DesignTokens",
+        type: "string",
+    })
     .option("c", {
         alias: "config-file",
         describe: "JSON configuration file",
@@ -45,9 +56,12 @@ const argv = cmdLineParser.argv;
 
 // TODO: Parse configuration file and merge parameters here
 
-const assetsFolder = argv.path as string;
+const outDir = argv.path as string;
 const fileId = argv.f as string;
 const apiToken = argv.t as string;
+const canvasName = argv.n as string;
+
+ensureDirExists(outDir)
 
 async function main() {
     const client = Figma.Client({
@@ -56,22 +70,14 @@ async function main() {
 
     const fileResponse = await client.file(fileId)
     if (fileResponse.status == 200) {
-        const designTokens = await parseDesignTokens(fileResponse.data)
+        const designTokens = await parseDesignTokens(fileResponse.data, canvasName)
         printDesignTokens(designTokens)
 
         const components = await parseComponents(fileResponse.data)
         printComponents(components, designTokens)
-        const assets = await parseAssetsTokens(fileResponse.data)
 
-        await downloadAssets(assets, {
-            client: client,
-            assetsFolder: assetsFolder,
-            fileId: fileId
-        })
-
-        const stylesFolder = assetsFolder.concat("/styles")
-        if(!existsSync(stylesFolder))
-            mkdirSync(stylesFolder)
+        const stylesFolder = path.join(outDir, "styles")
+        ensureDirExists(stylesFolder)
 
         console.log("\n", chalk.greenBright("Produced CSS"))
 
@@ -88,6 +94,29 @@ async function main() {
 
         writeFileSync(stylesFolder.concat("/".concat(textStylesFileName)), textCss)
 
+        const assets = await parseAssetsTokens(fileResponse.data)
+
+        const assetsDir = path.join(outDir, 'assets')
+        ensureDirExists(assetsDir)
+
+        const files = await downloadAssets(assets, {
+            client: client,
+            assetsFolder: assetsDir,
+            fileId: fileId
+        })
+
+        const colors = parseColors(designTokens)
+
+        const styledImagesFolder = path.join(outDir, 'styledImages')
+        ensureDirExists(styledImagesFolder)
+
+        const componentsFolder = path.join(outDir, 'components')
+        ensureDirExists(componentsFolder)
+
+        files.filter(file => file?.includes('.svg') == true).map(file => {
+            const styledSvg = replaceSvgColors(file!, colors, styledImagesFolder)
+            makeStyledComponentFromSvgFile(styledSvg, componentsFolder)
+        })
     } else {
         const message = chalk.red(`<ca092e5b> Can't retrieve file from Figma`)
         exit(1, Error(message))

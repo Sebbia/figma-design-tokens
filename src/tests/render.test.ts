@@ -1,4 +1,4 @@
-import { CssClass, CssProperty, CssVariableImpl, CssVariableSpecification, css } from './modules'
+import { CssClass, CssProperty, CssVariableImpl, CssVariableSpecification, css } from '../css-render/modules'
 
 test("Test css render", () => {
     const simpleClass = new CssClass("testClass", [
