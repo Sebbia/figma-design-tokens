@@ -1,7 +1,7 @@
 {
-  "name": "figma-design-tokens",
-  "version": "0.0.0",
-  "description": "Simple tool for export Figma design tokens",
+  "name": "@sebbia/export-figma-design-tokens",
+  "version": "0.0.1",
+  "description": "(WIP) Simple tool for export Figma design tokens",
   "keywords": [
     "figma",
     "export",
@@ -17,7 +17,8 @@
   "author": "Anatoly Nechay-Gumen (becklime@gmail.com)",
   "license": "ISC",
   "bin": {
-    "figma-design-tokens": "./bin/figma-design-tokens"
+    "figma-design-tokens": "./bin/figma-design-tokens",
+    "export-figma-design-tokens": "./bin/figma-design-tokens"
   },
   "repository": {
     "type": "git",

@@ -1,2 +1,7 @@
 /src
 tsconfig.json
+/assets
+/example
+.env
+jest.config.js
+/dist/tests
