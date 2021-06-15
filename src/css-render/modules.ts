@@ -86,7 +86,7 @@ export class CssVariableSpecification implements BaseRenderComponent {
 
 export class CssVariableImpl implements BaseRenderComponent {
     readonly name: string;
-    readonly default?: RenderedItem
+    readonly default?: RenderedItem | undefined
 
     constructor(name: string, defaultValue?: RenderedItem) {
         this.name = name
@@ -100,7 +100,7 @@ export class CssVariableImpl implements BaseRenderComponent {
 
 export class CssFunction implements BaseRenderComponent {
     readonly name: string;
-    readonly args?: RenderedItem[]
+    readonly args?: RenderedItem[] | undefined
 
     constructor(name: string, args?: RenderedItem[]) {
         this.name = name

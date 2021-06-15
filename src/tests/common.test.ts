@@ -1,4 +1,4 @@
-import { groupBy, unique } from './tools/listTools'
+import { groupBy, unique } from '../tools/listTools'
 
 const objs = [
     { "id": "unique <9f1f26e3>" },

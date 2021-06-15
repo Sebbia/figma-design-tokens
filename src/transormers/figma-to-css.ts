@@ -1,11 +1,11 @@
 import * as Figma from 'figma-js';
 import { css, CssModule } from "../css-render/modules";
-import { StyleObj } from "types";
+import { Color, StyleObj } from "types";
 import { convertColor, floor, normalizeStyleName } from '../tools/utils';
 // import debug from '../tools/debug';
 
-export function colorsToCss(designTokens: StyleObj[]): CssModule {
-    const colorVars = designTokens.filter(token => token.styleType == "FILL").flatMap(token => {
+export function parseColors(designTokens: StyleObj[]): Color[] {
+    const colors: Color[] = designTokens.filter(token => token.styleType == "FILL").flatMap(token => {
         const styles = []
         const style = token.value as Figma.Paint
         // debug(style)
@@ -18,14 +18,27 @@ export function colorsToCss(designTokens: StyleObj[]): CssModule {
             ])
             const variableName = normalizeStyleName(token.styleObj.name)
             const isThemeColor = token.styleObj.name.split('/').map(i => i.toLocaleLowerCase().trim()).includes('theme')
-            styles.push(
-                css.declareVar(
-                    variableName,
-                    isThemeColor ? css.useVar(variableName.concat("-override"), rgbaColor) : rgbaColor
-                )
-            )
+
+            styles.push({
+                name: variableName,
+                value: rgbaColor,
+                rawColor: style.color,
+                isThemeColor
+            })
         }
         return styles
+    })
+    return colors
+}
+
+export function colorsToCss(designTokens: StyleObj[]): CssModule {
+    const colorVars = parseColors(designTokens).map(color => {
+        // debug(style)
+        const variableName = color.name
+        return css.declareVar(
+            variableName,
+            color.isThemeColor ? css.useVar(variableName.concat("-override"), color.value) : color.value
+        )
     })
     return css.useBlock(":root", colorVars)
 }

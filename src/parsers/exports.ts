@@ -33,7 +33,7 @@ export async function downloadAssets(
         fileId: string,
         assetsFolder: string
     }
-): Promise<void[]> {
+): Promise<(string | undefined)[]> {
     const exports = assets.flatMap(asset => {
         // TODO: Fix types, add type guard for exportSettings field
         const exportSettings = (asset as Figma.Rectangle).exportSettings
@@ -70,7 +70,7 @@ export async function downloadAssets(
                 const response = await params.client.fileImages(params.fileId, {
                     ids: [exportSetting.id],
                     format: format,
-                    scale: scale
+                    scale: scale!
                 })
                 // debug(response.data)
                 if (!fs.existsSync(params.assetsFolder))
@@ -78,8 +78,10 @@ export async function downloadAssets(
                 const url = response.data.images[exportSetting.id]
                 await downloadFile(url, filename)
                 console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
+                return filename
             } catch (e) {
                 console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
+                return undefined
             }
         })
     )

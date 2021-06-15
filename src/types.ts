@@ -1,6 +1,7 @@
 
-import { NodeType, VectorBase } from 'figma-js'
+import { NodeType, VectorBase, Color as FigmaColor } from 'figma-js'
 import * as Figma from 'figma-js';
+import { CssVariableImpl } from 'css-render/modules';
 
 export interface StrokeStyle {
     strokes: Figma.Paint[],
@@ -16,5 +17,12 @@ export interface StyleObj {
 }
 
 type ExtendedNodeType =  NodeType & 'COMPONENT_SET'
+
+export interface Color {
+    name: string,
+    value: CssVariableImpl,
+    rawColor: FigmaColor
+    isThemeColor: boolean
+}
 
 export { ExtendedNodeType }
