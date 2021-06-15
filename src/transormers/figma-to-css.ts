@@ -26,6 +26,26 @@ export function parseColors(designTokens: StyleObj[]): Color[] {
                 isThemeColor
             })
         }
+        if((style as any).strokes != undefined){
+            ((style as any).strokes as Figma.Paint[]).forEach(stroke => {
+                const color = stroke.color!
+                const rgbaColor = css.fun("rgba", [
+                    convertColor(color.r),
+                    convertColor(color.g),
+                    convertColor(color.b),
+                    style.opacity ? floor(style.opacity, 2) : 1
+                ])
+                const variableName = normalizeStyleName(token.styleObj.name)
+                const isThemeColor = token.styleObj.name.split('/').map(i => i.toLocaleLowerCase().trim()).includes('theme')
+    
+                styles.push({
+                    name: variableName,
+                    value: rgbaColor,
+                    rawColor: color,
+                    isThemeColor
+                })
+            })
+        }
         return styles
     })
     return colors

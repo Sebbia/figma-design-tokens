@@ -73,7 +73,7 @@ async function main() {
         const designTokens = await parseDesignTokens(fileResponse.data, canvasName)
         printDesignTokens(designTokens)
 
-        const components = await parseComponents(fileResponse.data)
+        const components = await parseComponents(fileResponse.data, canvasName)
         printComponents(components, designTokens)
 
         const stylesFolder = path.join(outDir, "styles")
@@ -94,7 +94,7 @@ async function main() {
 
         writeFileSync(stylesFolder.concat("/".concat(textStylesFileName)), textCss)
 
-        const assets = await parseAssetsTokens(fileResponse.data)
+        const assets = await parseAssetsTokens(fileResponse.data, canvasName)
 
         const assetsDir = path.join(outDir, 'assets')
         ensureDirExists(assetsDir)

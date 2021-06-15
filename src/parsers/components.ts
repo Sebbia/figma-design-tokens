@@ -5,13 +5,13 @@ import { findAllRecursive } from '../tools/recursiveSearch';
 import chalk from 'chalk';
 // import debug from '../tools/debug';
 
-export async function parseComponents(data: Figma.FileResponse): Promise<Figma.Node[]> {
+export async function parseComponents(data: Figma.FileResponse, canvasName: string): Promise<Figma.Node[]> {
     const componentsHolder =
         (
             data.document
                 .children
                 // TODO: Fix types, add type guard for children field
-                .find(x => x.name == 'Components') as Figma.Canvas
+                .find(x => x.name ==  canvasName) as Figma.Canvas
         ).children.filter(x => x.type != 'TEXT')
 
     const components = findAllRecursive(componentsHolder, (token) => {

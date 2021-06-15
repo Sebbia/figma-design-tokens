@@ -38,7 +38,7 @@ export function convertRGBToHex(r: number, g: number, b: number) {
     if (bhex.length == 1)
         bhex = `0${bhex}`;
 
-    return `#${rhex}${ghex}${bhex}`;
+    return `#${rhex}${ghex}${bhex}`.toUpperCase();
 }
 
 export function convertColorToHex(color: Color) {

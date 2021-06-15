@@ -5,13 +5,13 @@ import { downloadFile } from '../tools/download';
 import { normalizeStyleName } from '../tools/utils'
 import chalk from 'chalk';
 
-export async function parseAssetsTokens(data: Figma.FileResponse): Promise<Figma.Node[]> {
+export async function parseAssetsTokens(data: Figma.FileResponse, canvasName: string): Promise<Figma.Node[]> {
     const assetsTokensHolders =
         (
             data.document
                 .children
                 // TODO: Fix types, add type guard for children field
-                .find(x => x.name == 'DesignTokens') as Figma.Canvas
+                .find(x => x.name == canvasName) as Figma.Canvas
         ).children.filter(x => x.type != 'TEXT')
 
 

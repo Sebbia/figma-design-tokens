@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { byKey, byNullableStringParameter, groupBy, unique } from '../tools/listTools';
 import { findAllRecursive } from '../tools/recursiveSearch';
 import debug from '../tools/debug';
-import { convertColor, floor, isNotNull } from '../tools/utils';
+import { convertColor, convertRGBToHex, floor, isNotNull } from '../tools/utils';
 import { StyleObj } from 'types';
 
 
@@ -17,14 +17,14 @@ export async function parseDesignTokens(data: Figma.FileResponse, canvasName: st
         ).children
     // .filter(x => x.type != 'TEXT')
 
+    const nodesWithStyles = findAllRecursive(
+        designTokensHolders,
+        (holder) => 'styles' in holder && Boolean(holder.styles),
+        true
+    )
+
     const designTokensMap = Object.keys(data.styles).flatMap(style => {
         const styleInfo = data.styles[style]
-
-        const nodesWithStyles = findAllRecursive(
-            designTokensHolders,
-            (holder) => 'styles' in holder && Boolean(holder.styles),
-            true
-        )
 
         const stylesMap = nodesWithStyles.flatMap((x) => {
             // TODO: Fix types, add type guard for styles field
@@ -41,6 +41,9 @@ export async function parseDesignTokens(data: Figma.FileResponse, canvasName: st
                 switch (styleType?.toLowerCase()) {
                     case 'fills':
                     case "fill": {
+                        if('strokes' in x) {
+
+                        }
                         return {
                             "styleType": styleInfo.styleType,
                             "styleName": style,
@@ -95,13 +98,22 @@ export async function parseDesignTokens(data: Figma.FileResponse, canvasName: st
 }
 
 function printFill(name: string, style: Figma.Paint) {
-    const c = style.color
-    if (c)
+    let c = style.color
+    if((style as any).strokes != undefined){
+        ((style as any).strokes as Figma.Paint[]).forEach(stroke => {
+            c = stroke.color
+        })
+    }
+    if (c){
+        const chalkColor = chalk.rgb(convertColor(c.r), convertColor(c.g), convertColor(c.b))
         console.log(
             chalk.bold(name),
+            chalkColor(convertRGBToHex(convertColor(c.r), convertColor(c.g), convertColor(c.b))),
             "\n",
-            chalk.rgb(convertColor(c.r), convertColor(c.g), convertColor(c.b)).underline("██████████████████")
+            chalkColor.underline("██████████████████")
         )
+    }
+
 }
 
 function printTextStyle(name: string, style: Figma.TypeStyle) {
@@ -149,6 +161,9 @@ export function printDesignTokens(designTokens: StyleObj[]) {
                     printTextStyle(style?.styleObj.name, style.value as Figma.TypeStyle)
                 })
                 break;
+            };
+            default: {
+                console.log(chalk.greenBright(`\n Unkown style type ${styleType} with ${styles.length} styles:`))
             }
         }
     })
