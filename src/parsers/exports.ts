@@ -31,7 +31,8 @@ export async function downloadAssets(
     params: {
         client: Figma.ClientInterface,
         fileId: string,
-        assetsFolder: string
+        assetsFolder: string,
+        timeout?: number
     }
 ): Promise<(string | undefined)[]> {
     const exports = assets.flatMap(asset => {
@@ -76,7 +77,7 @@ export async function downloadAssets(
                 if (!fs.existsSync(params.assetsFolder))
                     fs.mkdirSync(params.assetsFolder)
                 const url = response.data.images[exportSetting.id]
-                await downloadFile(url, filename)
+                await downloadFile(url, filename, params.timeout)
                 console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
                 return filename
             } catch (e) {

@@ -14,12 +14,12 @@ const agent = new https.Agent({
 });
 
 // TODO: Add normal errors
-export async function downloadFile(url: string, path: string) {
+export async function downloadFile(url: string, path: string, timeout?: number) {
     
     const controller = new AbortController();
-    const timeout = setTimeout(() => {
+    const requestTimeout = setTimeout(() => {
         controller.abort();
-    }, 1_000);
+    }, timeout || 10_000);
     
     let fileResponse
     try {
@@ -28,7 +28,7 @@ export async function downloadFile(url: string, path: string) {
             agent: agent
         })
     } finally {
-        clearTimeout(timeout);
+        clearTimeout(requestTimeout);
     }
     if (!fileResponse.ok) throw new Error(`<96354da5> Unexpected response ${fileResponse.statusText}`)
     streamPipeline(fileResponse.body, fs.createWriteStream(path))
