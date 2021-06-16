@@ -2,7 +2,7 @@
 import { convertColor, convertRGBToHex } from "../tools/utils";
 import { Color } from "../types";
 import { css } from "../css-render/modules";
-import { readFileSync, writeFileSync } from "fs";
+import { readFile, writeFile } from "fs/promises";
 import path from "path";
 
 function* combineColors(rawColor: { r: number, g: number, b: number }) {
@@ -55,11 +55,11 @@ export function replaceColorsToVariables(content: string, colors: Color[]): stri
     return newContent
 }
 
-export function replaceSvgColors(filename: string, colors: Color[], outdir: string): string {
-    const fileContent = readFileSync(filename).toString()
+export async function replaceSvgColors(filename: string, colors: Color[], outdir: string): Promise<string> {
+    const fileContent = await readFile(filename, 'utf-8')
     const newContent = replaceColorsToVariables(fileContent, colors)
     const newFileName = path.basename(filename).split('.').slice(0, -1).join('.').concat('.styled.svg')
     const newFilepath = path.join(outdir, newFileName)
-    writeFileSync(newFilepath, newContent)
+    await writeFile(newFilepath, newContent)
     return newFilepath
 }

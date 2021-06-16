@@ -11,7 +11,7 @@ import { writeFileSync } from "fs";
 import { replaceSvgColors } from "./transormers/svg-to-styled";
 import path from "path";
 import { ensureDirExists } from "./tools/utils";
-import { makeStyledComponentFromSvgFile } from "./transormers/styled-svg-to-rc";
+import { createIndexFile, makeStyledComponentFromSvgFile } from "./transormers/styled-svg-to-rc";
 
 
 const cmdLineParser = yargs
@@ -113,10 +113,11 @@ async function main() {
         const componentsFolder = path.join(outDir, 'components')
         ensureDirExists(componentsFolder)
 
-        files.filter(file => file?.includes('.svg') == true).map(file => {
-            const styledSvg = replaceSvgColors(file!, colors, styledImagesFolder)
-            makeStyledComponentFromSvgFile(styledSvg, componentsFolder)
-        })
+        const reactComponents = await Promise.all(files.filter(file => file?.includes('.svg') == true).map(async file => {
+            const styledSvg = await replaceSvgColors(file!, colors, styledImagesFolder)
+            return makeStyledComponentFromSvgFile(styledSvg, componentsFolder)
+        }))
+        createIndexFile(reactComponents, componentsFolder)
     } else {
         const message = chalk.red(`<ca092e5b> Can't retrieve file from Figma`)
         exit(1, Error(message))

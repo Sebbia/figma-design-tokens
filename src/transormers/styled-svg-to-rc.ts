@@ -67,7 +67,7 @@ export function makeStyledComponentFromSvg(content: string, filename: string, ou
     return componentContent
 }
 
-export function makeStyledComponentFromSvgFile(filepath: string, outdir: string) {
+export function makeStyledComponentFromSvgFile(filepath: string, outdir: string): Component {
     const filename = path.basename(filepath)
     const fileContent = readFileSync(filepath).toString()
     const componentContent = makeStyledComponentFromSvg(fileContent, filename, outdir)
@@ -80,4 +80,29 @@ export function makeStyledComponentFromSvgFile(filepath: string, outdir: string)
     copyFileSync(filepath, path.join(componentPath, filename))
 
     writeFileSync(path.join(componentPath, `${componentName}.tsx`), componentContent)
+    return { componentName, path: componentPath }
+}
+
+export type Component = {
+    componentName: string,
+    path: string
+}
+
+export function makeIndexFile(components: Component[], outdir: string): string {
+    return html`
+    ${components.map((component) => {
+        return `import ${component.componentName} from './${component.componentName}/${component.componentName}'`
+    })}
+
+    export {
+        ${components.map((component) => {
+            return `${component.componentName},`
+        })}
+    }
+    `
+}
+
+export function createIndexFile(components: Component[], outdir: string) {
+    const indexFile = makeIndexFile(components, outdir)
+    writeFileSync(path.join(outdir, `index.tsx`), indexFile)
 }
