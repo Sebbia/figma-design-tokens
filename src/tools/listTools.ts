@@ -1,9 +1,10 @@
 
 type FilterComparator<T> = (element: T, index: number, array: T[]) => boolean
 
-export function unique<T, R>(uniqueBy: (value: T) => R): FilterComparator<T> {
+export function unique<T, R>(uniqueBy?: (value: T) => R): FilterComparator<T> {
+    const uniqueByFunction = uniqueBy || ((value) => value)
     const comparator = (element: T, index: number, array: T[]): boolean => {
-        return array.findIndex((value) => uniqueBy(value) == uniqueBy(element)) == index
+        return array.findIndex((value) => uniqueByFunction(value) == uniqueByFunction(element)) == index
     }
 
     return comparator
