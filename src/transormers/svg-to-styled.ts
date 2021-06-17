@@ -5,7 +5,9 @@ import { css } from "../css-render/modules";
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { unique } from "../tools/listTools";
-import { v4 as uuid } from 'uuid'
+import { createHash } from 'crypto';
+
+const hashType = 'sha256';
 
 function* combineColors(rawColor: { r: number, g: number, b: number }) {
     function generateSimilarValues(val: number): number[] {
@@ -64,9 +66,11 @@ export function replaceElementsIdentifiersToUnique(content: string): string {
 
     const identifiers = identifiersResult.map(it => it[1]).filter(unique())
 
+    const uniquePrefix = createHash(hashType).update(content).digest('base64')
+
     return identifiers.reduce((prev, id, arr) => {
         const regex = new RegExp(`${id}`, 'gmi')
-        return prev.replace(regex, uuid().replace(/-/g, ''))
+        return prev.replace(regex, `${id}_${uniquePrefix.replace(/\W/gi, '')}`)
     }, content)
 }
 
