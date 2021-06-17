@@ -2,6 +2,7 @@ import * as Figma from 'figma-js';
 import { css, CssModule } from "../css-render/modules";
 import { Color, StyleObj } from "types";
 import { convertColor, floor, normalizeStyleName } from '../tools/utils';
+import { unique } from '../tools/listTools';
 // import debug from '../tools/debug';
 
 export function parseColors(designTokens: StyleObj[], themePrefix: string): Color[] {
@@ -18,7 +19,7 @@ export function parseColors(designTokens: StyleObj[], themePrefix: string): Colo
             ])
             const variableName = normalizeStyleName(token.styleObj.name)
             const isThemeColor = token.styleObj.name.split('/').map(i => i.toLocaleLowerCase().trim()).includes(themePrefix)
-            
+
             return {
                 name: variableName,
                 value: rgbaColor,
@@ -30,14 +31,14 @@ export function parseColors(designTokens: StyleObj[], themePrefix: string): Colo
         if (style.color) {
             styles.push(styleFromColor(style.color))
         }
-        if((style as any).strokes != undefined){
+        if ((style as any).strokes != undefined) {
             ((style as any).strokes as Figma.Paint[]).forEach(stroke => {
                 const color = stroke.color!
                 styles.push(styleFromColor(color))
             })
         }
         return styles
-    })
+    }).filter(unique(color => color.name))
     return colors
 }
 

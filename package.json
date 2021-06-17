@@ -1,6 +1,6 @@
 {
   "name": "@sebbia/export-figma-design-tokens",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "(WIP) Simple tool for export Figma design tokens",
   "keywords": [
     "figma",
