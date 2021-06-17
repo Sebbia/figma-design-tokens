@@ -8,42 +8,32 @@ export function parseColors(designTokens: StyleObj[], themePrefix: string): Colo
     const colors: Color[] = designTokens.filter(token => token.styleType == "FILL").flatMap(token => {
         const styles = []
         const style = token.value as Figma.Paint
-        // debug(style)
-        if (style.color) {
+
+        function styleFromColor(color: Figma.Color) {
             const rgbaColor = css.fun("rgba", [
-                convertColor(style.color.r),
-                convertColor(style.color.g),
-                convertColor(style.color.b),
+                convertColor(color.r),
+                convertColor(color.g),
+                convertColor(color.b),
                 style.opacity ? floor(style.opacity, 2) : 1
             ])
             const variableName = normalizeStyleName(token.styleObj.name)
             const isThemeColor = token.styleObj.name.split('/').map(i => i.toLocaleLowerCase().trim()).includes(themePrefix)
-
-            styles.push({
+            
+            return {
                 name: variableName,
                 value: rgbaColor,
-                rawColor: style.color,
+                rawColor: color,
                 isThemeColor
-            })
+            }
+        }
+        // debug(style)
+        if (style.color) {
+            styles.push(styleFromColor(style.color))
         }
         if((style as any).strokes != undefined){
             ((style as any).strokes as Figma.Paint[]).forEach(stroke => {
                 const color = stroke.color!
-                const rgbaColor = css.fun("rgba", [
-                    convertColor(color.r),
-                    convertColor(color.g),
-                    convertColor(color.b),
-                    style.opacity ? floor(style.opacity, 2) : 1
-                ])
-                const variableName = normalizeStyleName(token.styleObj.name)
-                const isThemeColor = token.styleObj.name.split('/').map(i => i.toLocaleLowerCase().trim()).includes('theme')
-    
-                styles.push({
-                    name: variableName,
-                    value: rgbaColor,
-                    rawColor: color,
-                    isThemeColor
-                })
+                styles.push(styleFromColor(color))
             })
         }
         return styles
