@@ -4,7 +4,7 @@ import { Color, StyleObj } from "types";
 import { convertColor, floor, normalizeStyleName } from '../tools/utils';
 // import debug from '../tools/debug';
 
-export function parseColors(designTokens: StyleObj[]): Color[] {
+export function parseColors(designTokens: StyleObj[], themePrefix: string): Color[] {
     const colors: Color[] = designTokens.filter(token => token.styleType == "FILL").flatMap(token => {
         const styles = []
         const style = token.value as Figma.Paint
@@ -17,7 +17,7 @@ export function parseColors(designTokens: StyleObj[]): Color[] {
                 style.opacity ? floor(style.opacity, 2) : 1
             ])
             const variableName = normalizeStyleName(token.styleObj.name)
-            const isThemeColor = token.styleObj.name.split('/').map(i => i.toLocaleLowerCase().trim()).includes('theme')
+            const isThemeColor = token.styleObj.name.split('/').map(i => i.toLocaleLowerCase().trim()).includes(themePrefix)
 
             styles.push({
                 name: variableName,
@@ -51,8 +51,8 @@ export function parseColors(designTokens: StyleObj[]): Color[] {
     return colors
 }
 
-export function colorsToCss(designTokens: StyleObj[]): CssModule {
-    const colorVars = parseColors(designTokens).map(color => {
+export function colorsToCss(designTokens: StyleObj[], themePrefix: string): CssModule {
+    const colorVars = parseColors(designTokens, themePrefix).map(color => {
         // debug(style)
         const variableName = color.name
         return css.declareVar(

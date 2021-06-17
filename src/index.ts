@@ -50,6 +50,13 @@ const cmdLineParser = yargs
         type: "string",
         default: "./.figmarc.json",
     })
+    .option("s", {
+        alias: "theme-prefix",
+        describe: "Theme prefix for CSS color variables",
+        nargs: 1,
+        type: "string",
+        default: "theme",
+    })
     .demandCommand();
 
 const argv = cmdLineParser.argv;
@@ -60,6 +67,7 @@ const outDir = argv.path as string;
 const fileId = argv.f as string;
 const apiToken = argv.t as string;
 const canvasName = argv.n as string;
+const themePrefix = argv['theme-prefix'] as string;
 
 ensureDirExists(outDir)
 
@@ -83,7 +91,7 @@ async function main() {
 
         const colorStylesFileName = "colors.css"
         console.log("\n", chalk.greenBright(chalk.bold(colorStylesFileName)))
-        const colorsCss = colorsToCss(designTokens).render()
+        const colorsCss = colorsToCss(designTokens, themePrefix).render()
         console.log(chalk.bold(colorsCss))
         writeFileSync(stylesFolder.concat("/".concat(colorStylesFileName)), colorsCss)
 
@@ -105,7 +113,7 @@ async function main() {
             fileId: fileId
         })
 
-        const colors = parseColors(designTokens)
+        const colors = parseColors(designTokens, themePrefix)
 
         const styledImagesFolder = path.join(outDir, 'styledImages')
         ensureDirExists(styledImagesFolder)
