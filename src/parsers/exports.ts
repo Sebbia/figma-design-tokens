@@ -3,7 +3,7 @@ import * as Figma from 'figma-js';
 import { findAllRecursive } from '../tools/recursiveSearch';
 import { downloadFile } from '../tools/download';
 import { repeatOnError } from "../tools/repeatOnError";
-import { ensureDirExists, normalizeStyleName } from '../tools/utils'
+import { ensureDirExists, mapAsyncSeq, normalizeStyleName } from '../tools/utils'
 import chalk from 'chalk';
 import path from 'path';
 
@@ -35,7 +35,7 @@ export async function downloadAssets(
         fileId: string,
         assetsFolder: string
     }
-): Promise<({name: string, filename: string } | undefined)[]> {
+): Promise<({ name: string, filename: string } | undefined)[]> {
     const exports = assets.flatMap(asset => {
         // TODO: Fix types, add type guard for exportSettings field
         const exportSettings = (asset as Figma.Rectangle).exportSettings
@@ -51,48 +51,46 @@ export async function downloadAssets(
     })
 
     console.log(chalk.greenBright(`\nLoad ${exports.length} assets:`))
-    const promise = Promise.all(
-        exports.map(async exportSetting => {
-            let format: Figma.exportFormatOptions;
-            switch (exportSetting.format) {
-                case 'JPG': format = 'jpg'; break;
-                case 'PDF': format = 'pdf'; break;
-                case 'PNG': format = 'png'; break;
-                case 'SVG': format = 'svg'; break;
+    const promise = mapAsyncSeq(exports, async exportSetting => {
+        let format: Figma.exportFormatOptions;
+        switch (exportSetting.format) {
+            case 'JPG': format = 'jpg'; break;
+            case 'PDF': format = 'pdf'; break;
+            case 'PNG': format = 'png'; break;
+            case 'SVG': format = 'svg'; break;
+        }
+
+        let scale: number | undefined = undefined;
+        switch (exportSetting.constraint.type) {
+            case 'SCALE': scale = exportSetting.constraint.value
+        }
+
+        const groups = exportSetting.name.split('/')
+        const filepath = path.join(params.assetsFolder, groups.join('/'))
+        ensureDirExists(filepath)
+
+        const filename = `${filepath}/${normalizeStyleName(groups[groups.length - 1])}${exportSetting.suffix}.${format}`
+
+        try {
+            const response = await repeatOnError(async () => await params.client.fileImages(params.fileId, {
+                ids: [exportSetting.id],
+                format: format,
+                scale: scale!
+            }))
+            // debug(response.data)
+            if (!fs.existsSync(params.assetsFolder))
+                fs.mkdirSync(params.assetsFolder)
+            const url = response.data.images[exportSetting.id]
+            await downloadFile(url, filename)
+            console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
+            return {
+                name: exportSetting.name,
+                filename: filename
             }
-
-            let scale: number | undefined = undefined;
-            switch (exportSetting.constraint.type) {
-                case 'SCALE': scale = exportSetting.constraint.value
-            }
-
-            const groups = exportSetting.name.split('/')
-            const filepath = path.join(params.assetsFolder, groups.join('/'))
-            ensureDirExists(filepath)
-
-            const filename = `${filepath}/${normalizeStyleName(groups[groups.length-1])}${exportSetting.suffix}.${format}`
-
-            try {
-                const response = await repeatOnError(async () => await params.client.fileImages(params.fileId, {
-                    ids: [exportSetting.id],
-                    format: format,
-                    scale: scale!
-                }))
-                // debug(response.data)
-                if (!fs.existsSync(params.assetsFolder))
-                    fs.mkdirSync(params.assetsFolder)
-                const url = response.data.images[exportSetting.id]
-                await downloadFile(url, filename)
-                console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
-                return {
-                    name: exportSetting.name,
-                    filename: filename
-                }
-            } catch (e) {
-                console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
-                return undefined
-            }
-        })
-    )
+        } catch (e) {
+            console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
+            return undefined
+        }
+    })
     return promise
 }

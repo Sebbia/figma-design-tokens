@@ -53,3 +53,16 @@ export function ensureDirExists(dir: string) {
     if(!existsSync(dir))
             mkdirSync(dir, { recursive: true })
 }
+
+/**
+ * Sequential processing async functions
+ */
+export async function mapAsyncSeq<T, R>(array: T[], block: (value: T) => Promise<R>): Promise<R[]> {
+    const result = array.reduce(async (prev, curr, i, r) => {
+        const results = await prev;
+        const newValue = await block(curr)
+        return [...results, newValue]
+    }, Promise.resolve<R[]>([]))
+
+    return result
+}
