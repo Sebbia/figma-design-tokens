@@ -57,7 +57,8 @@ export function makeStyledComponentFromSvg(content: string, filename: string, ou
 
         /**
          * Generated component
-         * Available CSS variables: ${variables.join(', ')}
+         * Available CSS variables: 
+         ${variables.map(v => `* ${v},`)}
          **/
         export default function ${componentName}(${componentProps.length > 0 ? `props?: ${componentPropsTypeName}` : ''}) {
             return <${componentName}Svg ${componentProps.length > 0 ? `style={{ ...propsToCssVars(props) }}` : ''}/>

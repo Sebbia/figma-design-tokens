@@ -107,7 +107,9 @@ export type TestComponentProps = {
 
 /**
  * Generated component
- * Available CSS variables: theme_themeAccent, theme_themeAccent-override
+ * Available CSS variables: 
+ * theme_themeAccent,
+ * theme_themeAccent-override,
  **/
 export default function TestComponent(props?: TestComponentProps) {
     return <TestComponentSvg style={{ ...propsToCssVars(props) }}/>
