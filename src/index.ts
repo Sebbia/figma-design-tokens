@@ -12,6 +12,7 @@ import { replaceSvgColors } from "./transormers/svg-to-styled";
 import path from "path";
 import { ensureDirExists } from "./tools/utils";
 import { createIndexFile, makeStyledComponentFromSvgFile } from "./transormers/styled-svg-to-rc";
+import { repeatOnError } from "./tools/repeatOnError";
 
 
 const cmdLineParser = yargs
@@ -76,7 +77,7 @@ async function main() {
         personalAccessToken: apiToken
     })
 
-    const fileResponse = await client.file(fileId)
+    const fileResponse = await repeatOnError(async () => await client.file(fileId))
     if (fileResponse.status == 200) {
         const designTokens = await parseDesignTokens(fileResponse.data, canvasName)
         printDesignTokens(designTokens)

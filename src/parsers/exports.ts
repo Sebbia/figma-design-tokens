@@ -2,6 +2,7 @@ import fs from 'fs';
 import * as Figma from 'figma-js';
 import { findAllRecursive } from '../tools/recursiveSearch';
 import { downloadFile } from '../tools/download';
+import { repeatOnError } from "../tools/repeatOnError";
 import { ensureDirExists, normalizeStyleName } from '../tools/utils'
 import chalk from 'chalk';
 import path from 'path';
@@ -60,7 +61,7 @@ export async function downloadAssets(
                 case 'SVG': format = 'svg'; break;
             }
 
-            let scale = undefined;
+            let scale: number | undefined = undefined;
             switch (exportSetting.constraint.type) {
                 case 'SCALE': scale = exportSetting.constraint.value
             }
@@ -72,11 +73,11 @@ export async function downloadAssets(
             const filename = `${filepath}/${normalizeStyleName(groups[groups.length-1])}${exportSetting.suffix}.${format}`
 
             try {
-                const response = await params.client.fileImages(params.fileId, {
+                const response = await repeatOnError(async () => await params.client.fileImages(params.fileId, {
                     ids: [exportSetting.id],
                     format: format,
                     scale: scale!
-                })
+                }))
                 // debug(response.data)
                 if (!fs.existsSync(params.assetsFolder))
                     fs.mkdirSync(params.assetsFolder)
