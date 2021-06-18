@@ -11,7 +11,7 @@ export function convertColor(color: number): number {
 }
 
 export function normalizeStyleName(name: string): string {
-    return name.replace(/\//g, '_').replace(/\s/g, '_').replace(/\_{2,}/g, '_')
+    return name.trim().replace(/\//g, '_').replace(/\s/g, '_').replace(/\_{2,}/g, '_')
 }
 
 export function isKeyOfObject<T extends Object>(obj: T, key: any): key is keyof typeof obj {
