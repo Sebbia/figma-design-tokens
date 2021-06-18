@@ -107,7 +107,7 @@ async function main() {
         const assetsDir = path.join(outDir, 'assets')
         ensureDirExists(assetsDir)
 
-        const files = await downloadAssets(assets, {
+        const storedAssets = await downloadAssets(assets, {
             client: client,
             assetsFolder: assetsDir,
             fileId: fileId
@@ -121,10 +121,14 @@ async function main() {
         const componentsFolder = path.join(outDir, 'components')
         ensureDirExists(componentsFolder)
 
-        const reactComponents = await Promise.all(files.filter(file => file?.includes('.svg') == true).map(async file => {
-            const styledSvg = await replaceSvgColors(file!, colors, styledImagesFolder)
-            return makeStyledComponentFromSvgFile(styledSvg, componentsFolder)
-        }))
+        const reactComponents = await Promise.all(
+            storedAssets
+                .filter(asset => asset?.filename?.includes('.svg') == true)
+                .map(async asset => {
+                    const styledSvg = await replaceSvgColors(asset?.name!, asset?.filename!, colors, styledImagesFolder)
+                    return makeStyledComponentFromSvgFile(asset?.name!, styledSvg, componentsFolder)
+                })
+        )
         createIndexFile(reactComponents, componentsFolder)
     } else {
         const message = chalk.red(`<ca092e5b> Can't retrieve file from Figma`)

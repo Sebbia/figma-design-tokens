@@ -2,8 +2,9 @@ import fs from 'fs';
 import * as Figma from 'figma-js';
 import { findAllRecursive } from '../tools/recursiveSearch';
 import { downloadFile } from '../tools/download';
-import { normalizeStyleName } from '../tools/utils'
+import { ensureDirExists, normalizeStyleName } from '../tools/utils'
 import chalk from 'chalk';
+import path from 'path';
 
 export async function parseAssetsTokens(data: Figma.FileResponse, canvasName: string): Promise<Figma.Node[]> {
     const assetsTokensHolders =
@@ -33,7 +34,7 @@ export async function downloadAssets(
         fileId: string,
         assetsFolder: string
     }
-): Promise<(string | undefined)[]> {
+): Promise<({name: string, filename: string } | undefined)[]> {
     const exports = assets.flatMap(asset => {
         // TODO: Fix types, add type guard for exportSettings field
         const exportSettings = (asset as Figma.Rectangle).exportSettings
@@ -64,7 +65,11 @@ export async function downloadAssets(
                 case 'SCALE': scale = exportSetting.constraint.value
             }
 
-            const filename = `${params.assetsFolder}/${normalizeStyleName(exportSetting.name)}${exportSetting.suffix}.${format}`
+            const groups = exportSetting.name.split('/')
+            const filepath = path.join(params.assetsFolder, groups.join('/'))
+            ensureDirExists(filepath)
+
+            const filename = `${filepath}/${normalizeStyleName(groups[groups.length-1])}${exportSetting.suffix}.${format}`
 
             try {
                 const response = await params.client.fileImages(params.fileId, {
@@ -78,7 +83,10 @@ export async function downloadAssets(
                 const url = response.data.images[exportSetting.id]
                 await downloadFile(url, filename)
                 console.log(`✓ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} downloaded into file ${filename} `)
-                return filename
+                return {
+                    name: exportSetting.name,
+                    filename: filename
+                }
             } catch (e) {
                 console.error(`❌ Asset ${chalk.bold(`${exportSetting.name} ${exportSetting.suffix} (${exportSetting.format})`)} download error`, e)
                 return undefined

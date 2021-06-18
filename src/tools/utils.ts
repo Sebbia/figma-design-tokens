@@ -51,5 +51,5 @@ export function convertColorToHex(color: Color) {
 
 export function ensureDirExists(dir: string) {
     if(!existsSync(dir))
-            mkdirSync(dir)
+            mkdirSync(dir, { recursive: true })
 }

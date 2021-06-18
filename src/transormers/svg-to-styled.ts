@@ -1,5 +1,5 @@
 
-import { convertColor, convertRGBToHex } from "../tools/utils";
+import { convertColor, convertRGBToHex, ensureDirExists } from "../tools/utils";
 import { Color } from "../types";
 import { css } from "../css-render/modules";
 import { readFile, writeFile } from "fs/promises";
@@ -74,12 +74,16 @@ export function replaceElementsIdentifiersToUnique(content: string): string {
     }, content)
 }
 
-export async function replaceSvgColors(filename: string, colors: Color[], outdir: string): Promise<string> {
+export async function replaceSvgColors(tokenName: string, filename: string, colors: Color[], outdir: string): Promise<string> {
     const fileContent = await readFile(filename, 'utf-8')
     const withReplacedIdentifiers = replaceElementsIdentifiersToUnique(fileContent)
     const withReplacedColors = replaceColorsToVariables(withReplacedIdentifiers, colors)
     const newFileName = path.basename(filename).split('.').slice(0, -1).join('.').concat('.styled.svg')
-    const newFilepath = path.join(outdir, newFileName)
+    const assetGroups = tokenName.split('/').slice(0, -1)
+    const newFileDir = path.join(outdir, assetGroups.join('/'))
+    const newFilepath = path.join(newFileDir, newFileName)
+    ensureDirExists(newFileDir)
+
     await writeFile(newFilepath, withReplacedColors)
     return newFilepath
 }

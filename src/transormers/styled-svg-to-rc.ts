@@ -1,10 +1,10 @@
 import camelcase from "camelcase";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
-import { unique } from "../tools/listTools";
+import { groupBy, unique } from "../tools/listTools";
 import { html } from 'common-tags';
 import chalk from "chalk";
-import { ensureDirExists } from "../tools/utils";
+import { ensureDirExists, normalizeStyleName } from "../tools/utils";
 
 const variableRegex = /--(?<variable>[\w-]+),?/gmi;
 
@@ -67,42 +67,56 @@ export function makeStyledComponentFromSvg(content: string, filename: string, ou
     return componentContent
 }
 
-export function makeStyledComponentFromSvgFile(filepath: string, outdir: string): Component {
+export function makeStyledComponentFromSvgFile(tokenName: string, filepath: string, outdir: string): Component {
     const filename = path.basename(filepath)
     const fileContent = readFileSync(filepath).toString()
     const componentContent = makeStyledComponentFromSvg(fileContent, filename, outdir)
     const componentName = camelcase(filename.split('.')[0], { pascalCase: true })
+    const componentGroups = tokenName.split('/')
 
-    const componentPath = path.join(outdir, componentName)
+    const componentPath = path.join(outdir, componentGroups.join('/'), componentName)
 
     ensureDirExists(componentPath)
 
     copyFileSync(filepath, path.join(componentPath, filename))
 
     writeFileSync(path.join(componentPath, `${componentName}.tsx`), componentContent)
-    return { componentName, path: componentPath }
+    return { componentName, path: componentPath, groups: componentGroups }
 }
 
 export type Component = {
     componentName: string,
+    groups: string[],
     path: string
 }
 
-export function makeIndexFile(components: Component[], outdir: string): string {
+export function makeIndexFile(components: Component[]): string {
     return html`
     ${components.map((component) => {
-        return `import ${component.componentName} from './${component.componentName}/${component.componentName}'`
+        return `import ${component.componentName} from './${component.groups.join('/')}${component.groups.length > 0 ? '/' : ''}${component.componentName}/${component.componentName}'`
     })}
 
-    export {
-        ${components.map((component) => {
-            return `${component.componentName},`
-        })}
-    }
+    ${[...groupBy(components, component => component.groups[0])].map((componentGrouped) => {
+        return componentGrouped[1].length > 1 ?
+            html`export declare namespace ${camelcase(normalizeStyleName(componentGrouped[0]).replace('_', ''), { pascalCase: true })} {
+            export { 
+                ${componentGrouped[1].map((component) => {
+                return `${component.componentName},`
+            })}
+            }
+        }
+        ` : html`export {
+            ${componentGrouped[1].map((component) => {
+                return `${component.componentName},`
+            })
+                }
+        };
+        `
+    })}
     `
 }
 
 export function createIndexFile(components: Component[], outdir: string) {
-    const indexFile = makeIndexFile(components, outdir)
+    const indexFile = makeIndexFile(components)
     writeFileSync(path.join(outdir, `index.tsx`), indexFile)
 }
