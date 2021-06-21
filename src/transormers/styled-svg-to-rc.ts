@@ -29,7 +29,7 @@ export function makeStyledComponentFromSvg(content: string, filename: string, ou
         ` into ${outdir}`
     )
 
-    const variables = parseVariables(content)
+    const variables = parseVariables(content).filter(it => !it.toLowerCase().includes("override")) // Remove override vars
     const componentProps = variables.map(variable => { return { name: camelcase(variable), variable: variable } })
     const componentName = camelcase(filename.split('.')[0], { pascalCase: true })
 
