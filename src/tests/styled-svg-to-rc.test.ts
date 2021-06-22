@@ -94,14 +94,12 @@ import { ReactComponent as TestComponentSvg } from './testComponent.svg';
 function propsToCssVars(props?: TestComponentProps): React.CSSProperties {
     return {
         '--theme_themeAccent': props?.styles?.themeThemeAccent,
-        '--theme_themeAccent-override': props?.styles?.themeThemeAccentOverride,
     } as React.CSSProperties
 }
 
 export type TestComponentProps = {
     styles?: {
         themeThemeAccent?: string
-        themeThemeAccentOverride?: string
     }
 }
 
@@ -109,7 +107,6 @@ export type TestComponentProps = {
  * Generated component
  * Available CSS variables: 
  * theme_themeAccent,
- * theme_themeAccent-override,
  **/
 export default function TestComponent(props?: TestComponentProps) {
     return <TestComponentSvg style={{ ...propsToCssVars(props) }}/>

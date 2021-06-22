@@ -2,11 +2,12 @@
 import { convertColor, convertRGBToHex, ensureDirExists } from "../tools/utils";
 import { Color } from "../types";
 import { css } from "../css-render/modules";
-import { readFile, writeFile } from "fs/promises";
+import { promises as fsPromises } from "fs";
 import path from "path";
 import { unique } from "../tools/listTools";
 import { createHash } from 'crypto';
 
+const { readFile, writeFile } = fsPromises
 const hashType = 'sha256';
 
 function* combineColors(rawColor: { r: number, g: number, b: number }) {
