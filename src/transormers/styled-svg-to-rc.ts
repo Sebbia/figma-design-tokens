@@ -2,7 +2,7 @@ import camelcase from "camelcase";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { groupBy, unique } from "../tools/listTools";
-import { html } from 'common-tags';
+import { html } from "common-tags";
 import chalk from "chalk";
 import { ensureDirExists, normalizeStyleName } from "../tools/utils";
 
@@ -60,7 +60,7 @@ export function makeStyledComponentFromSvg(content: string, filename: string, ou
          * Available CSS variables: 
          ${variables.map(v => `* ${v},`)}
          **/
-        export default function ${componentName}(${componentProps.length > 0 ? `props?: ${componentPropsTypeName}` : ''}) {
+        export function ${componentName}(${componentProps.length > 0 ? `props?: ${componentPropsTypeName}` : ''}) {
             return <${componentName}Svg ${componentProps.length > 0 ? `style={{ ...propsToCssVars(props) }}` : ''}/>
         }
     `
@@ -82,7 +82,27 @@ export function makeStyledComponentFromSvgFile(tokenName: string, filepath: stri
     copyFileSync(filepath, path.join(componentPath, filename))
 
     writeFileSync(path.join(componentPath, `${componentName}.tsx`), componentContent)
+
+    const componentIndexFileContent = makeComponentIndexFile(componentName)
+    writeFileSync(path.join(componentPath, 'index.ts'), componentIndexFileContent)
+
     return { componentName, path: componentPath, groups: componentGroups }
+}
+
+export function makeComponentIndexFile(componentName: string): string {
+  return html` export * from './${componentName}'; `;
+}
+
+export function makeComponentGroupIndexFile(components: Component[]): string {
+  return html`
+    ${components.map((component) => {
+      const componentPath =
+        component.groups.length > 1
+          ? component.groups.slice(1).concat(component.componentName).join("/")
+          : component.componentName;
+      return html`export * from "./${componentPath}"`;
+    })}
+  `;
 }
 
 export type Component = {
@@ -92,32 +112,22 @@ export type Component = {
 }
 
 export function makeIndexFile(components: Component[]): string {
-    return html`
-    ${components.map((component) => {
-        return `import ${component.componentName} from './${component.groups.join('/')}${component.groups.length > 0 ? '/' : ''}${component.componentName}/${component.componentName}'`
-    })}
-
-    ${[...groupBy(components, component => component.groups[0])].map((componentGrouped) => {
-        return componentGrouped[1].length > 1 ?
-            html`export declare namespace ${camelcase(normalizeStyleName(componentGrouped[0]).replace('_', ''), { pascalCase: true })} {
-            export { 
-                ${componentGrouped[1].map((component) => {
-                return `${component.componentName},`
-            })}
-            }
-        }
-        ` : html`export {
-            ${componentGrouped[1].map((component) => {
-                return `${component.componentName},`
-            })
-                }
-        };
-        `
-    })}
-    `
+  return html`
+    ${[...groupBy(components, (component) => component.groups[0])].map(
+      ([group, components]) => {
+        return html`export * as ${camelcase(normalizeStyleName(group).replace("_", ""), { pascalCase: true, })} from "./${group}"`;
+      }
+    )}
+  `;
 }
 
-export function createIndexFile(components: Component[], outdir: string) {
-    const indexFile = makeIndexFile(components)
-    writeFileSync(path.join(outdir, `index.tsx`), indexFile)
+export function createIndexFiles(components: Component[], outdir: string) {
+  [...groupBy(components, (it) => it.groups[0])].forEach(
+    ([group, components]) => {
+      const componentGroupIndexFile = makeComponentGroupIndexFile(components);
+      writeFileSync(path.join(outdir, group, "index.ts"), componentGroupIndexFile);
+    }
+  );
+  const indexFile = makeIndexFile(components);
+  writeFileSync(path.join(outdir, `index.tsx`), indexFile);
 }

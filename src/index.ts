@@ -11,7 +11,7 @@ import { writeFileSync } from "fs";
 import { replaceSvgColors } from "./transormers/svg-to-styled";
 import path from "path";
 import { ensureDirExists } from "./tools/utils";
-import { createIndexFile, makeStyledComponentFromSvgFile } from "./transormers/styled-svg-to-rc";
+import { createIndexFiles, makeStyledComponentFromSvgFile } from "./transormers/styled-svg-to-rc";
 import { repeatOnError } from "./tools/repeatOnError";
 
 
@@ -130,7 +130,7 @@ async function main() {
                     return makeStyledComponentFromSvgFile(asset?.name!, styledSvg, componentsFolder)
                 })
         )
-        createIndexFile(reactComponents, componentsFolder)
+        createIndexFiles(reactComponents, componentsFolder)
     } else {
         const message = chalk.red(`<ca092e5b> Can't retrieve file from Figma`)
         exit(1, Error(message))
